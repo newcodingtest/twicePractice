@@ -1,12 +1,11 @@
 package com.yoon.twicePractice.entity;
 
 import lombok.*;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Table;
 
 @Entity
 @Builder
@@ -14,12 +13,11 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @Getter
 @ToString
-public class Member extends BaseEntity {
+public class Movie extends BaseEntity {
+
     @Id
-    @GeneratedValue
-    private String mid;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long mno;
 
-    private String email;
-
-    private String name;
+    private String title;
 }
