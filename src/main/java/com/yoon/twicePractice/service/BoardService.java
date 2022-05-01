@@ -8,6 +8,8 @@ import com.yoon.twicePractice.entity.Member;
 
 public interface BoardService {
 
+    void modify(BoardDTO boardDTO);
+
     void removeWithReplies(Long bno);
 
     Long register(BoardDTO dto);

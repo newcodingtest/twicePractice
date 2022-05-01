@@ -24,12 +24,26 @@ public class BoardServiceImpl implements BoardService{
     private final BoardRepository boardRepository;
     private final ReplyRepository replyRepository;
 
+    /*
+    * modify()는 findById()를 이용하는 대신에 필요한 순간까지 로딩을 지연하는 방식인 getOnE()을 이용해서 처리한다
+    * */
+    @Override
+    public void modify(BoardDTO boardDTO) {
+        Board board = boardRepository.getOne(boardDTO.getBno());
+        board.changeContent(boardDTO.getTitle());
+        board.changeContent(boardDTO.getContent());
+
+        boardRepository.save(board);
+    }
+
     @Transactional
     @Override
     public void removeWithReplies(Long bno) {
 
         //댓글부터 삭제
-        replyRepository.deleteByBno();
+        replyRepository.deleteByBno(bno);
+
+        boardRepository.deleteById(bno);
     }
 
     @Override
