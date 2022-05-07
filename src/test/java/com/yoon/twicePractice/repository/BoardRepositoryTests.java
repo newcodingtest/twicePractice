@@ -2,6 +2,7 @@ package com.yoon.twicePractice.repository;
 
 import com.yoon.twicePractice.entity.Board;
 import com.yoon.twicePractice.entity.Member;
+import com.yoon.twicePractice.entity.Reply;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 
+import java.util.List;
 import java.util.stream.IntStream;
 
 @SpringBootTest
@@ -40,4 +42,6 @@ public class BoardRepositoryTests {
 
         Page<Object[]> result = boardRepository.searchPage("t","1", pageable);
     }
+
+
 }

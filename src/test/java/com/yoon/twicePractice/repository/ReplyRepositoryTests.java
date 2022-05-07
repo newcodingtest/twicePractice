@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.awt.print.Pageable;
+import java.util.List;
 import java.util.stream.IntStream;
 
 @SpringBootTest
@@ -37,5 +38,11 @@ public class ReplyRepositoryTests {
         });
     }
 
+    @Test
+    public void testListByBoard(){
+        List<Reply> replyList = replyRepository.getRepliesByBoardOrderByRno(Board.builder().bno(2L).build());
+
+        replyList.forEach(reply -> System.out.println(reply));
+    }
 
 }
