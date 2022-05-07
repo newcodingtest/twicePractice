@@ -330,5 +330,118 @@ configurations {
         return "redirect:/board/read";
     }
 ```
+- JPQL에서  Sort객체를 지원하지 않으므로 orderBy() 를 적용해야 하는 경우  OrderSpecifer 를 사용하자
+
+> JPQLQuery를 이용해서 동적으로 검색조건을 처리하면 상당히 복잡하고 어렵지만 장점은 한번의 개발만으로 count 쿼리도 같이 처리할수 있다.	
+
+```
+ public Page<Object[]> searchPage(String type, String keyword, Pageable pageable) {
+
+        QBoard board = QBoard.board;
+        QReply reply = QReply.reply;
+        QMember member = QMember.member;
+
+        JPQLQuery<Board> jpqlQuery = from(board);
+        jpqlQuery.leftJoin(member).on(board.writer.eq(member));
+        jpqlQuery.leftJoin(reply).on(reply.board.eq(board));
+
+        JPQLQuery<Tuple> tuple = jpqlQuery.select(board, member, reply.count());
+
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+        BooleanExpression expression = board.bno.gt(0L);
+
+        booleanBuilder.and(expression);
+
+        if(type!=null){
+            String[] typeArr = type.split("");
+
+            BooleanBuilder conditionBuilder = new BooleanBuilder();
+
+            for (String t : typeArr){
+                switch (t){
+                    case "t":
+                        conditionBuilder.or(board.title.contains(keyword));
+                        break;
+                    case "w":
+                        conditionBuilder.or(member.email.contains(keyword));
+                        break;
+                    case "c":
+                        conditionBuilder.or(board.content.contains(keyword));
+                        break;
+                }
+            }
+            booleanBuilder.and(conditionBuilder);
+        }
+
+        tuple.where(booleanBuilder);
+
+        Sort sort = pageable.getSort();
+        //tuple.groupBy(board);
+
+        sort.stream().forEach(order ->{
+            Order direction = order.isAscending()?Order.ASC:Order.DESC;
+            String prop = order.getProperty();  
+
+            PathBuilder orderByExpress = new PathBuilder(Board.class, "board");
+            tuple.orderBy(new OrderSpecifier(direction,orderByExpress.get(prop)));
+        });
+        tuple.groupBy(board);
+
+        tuple.offset(pageable.getOffset());
+        tuple.limit(pageable.getPageSize());
+
+        List<Tuple> result = tuple.fetch();
+
+        log.info(result.toString());
+
+        long count = tuple.fetchCount();
+        log.info("COUNT: " + count);
+
+        return new PageImpl<Object[]>(
+            result.stream().map(t -> t.toArray()).collect(Collectors.toList()),
+            pageable,
+            count);
+        }
+```
+
+-  EntityGraph는 특정 기능을 수행할때 EAGER로딩 하도록 지정이 가능
+
+> attributePaths: 로딩 설정을 변경하고 싶은  속성의 이름을 배열로 명시
+>
+> type: @EntityGraph를 어떤 바익을 적용할 것인지를 설정
+>
+> Fetch 속성값은  attributePaths 명시 속성은  EAGER 처리,  나머진 LAZY
+>
+> LOAD 속성값은 attributePaths  명시속성은  EAGER 처리, 나머진 엔티티 클래스 명시된 방식 또는 기본 방식으로 처리
+
+```
+@EntityGraph(attributePaths = {"member"}, type = EntityGraph.EntityGraphType.FETCH)
+    List<Review> fiindByMovie(Movie movie);
+    
+    
+@Entity
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@ToString(exclude = {"movie", "member"})
+public class Review extends BaseEntity{
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long reviewnum;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Movie movie;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User member;
+
+    private int grade;
+
+    private String text;
+}
+```
+
 
 
